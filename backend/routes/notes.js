@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.use(auth);
 
-router.get('/leads/:id/notes', getNotes);
-router.post('/leads/:id/notes', createNote);
+router.get('/:id/notes', getNotes);
+router.post('/:id/notes', createNote);
 
 module.exports = router;

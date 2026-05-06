@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const Leads = () => {
   const [leads, setLeads] = useState([]);
-  const [filters, setFilters] = useState({ status: '', leadSource: '', assignedSalesperson: '' });
+  const [filters, setFilters] = useState({ status: '', leadSource: '', assignedSalesperson: '', companyName: '' });
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -12,9 +12,13 @@ const Leads = () => {
   const [newLead, setNewLead] = useState({ leadName: '', companyName: '', email: '', phoneNumber: '', leadSource: 'Website', assignedSalesperson: '', status: 'New', dealValue: 0 });
 
   useEffect(() => {
-    // Don't auto-fetch leads on page load
-    // Only fetch when filters or search changes
-    if (filters.status || filters.leadSource || filters.assignedSalesperson || search) {
+    // Fetch all leads on initial load
+    fetchLeads();
+  }, []);
+
+  useEffect(() => {
+    // Re-filter when filters or search changes
+    if (filters.status || filters.leadSource || filters.assignedSalesperson || filters.companyName || search) {
       fetchLeads();
     }
   }, [filters, search]);
@@ -23,10 +27,22 @@ const Leads = () => {
     try {
       const res = await axios.get('http://localhost:5000/api/leads');
       let filtered = res.data;
+
+      // Apply filters
       if (filters.status) filtered = filtered.filter(l => l.status === filters.status);
       if (filters.leadSource) filtered = filtered.filter(l => l.leadSource === filters.leadSource);
       if (filters.assignedSalesperson) filtered = filtered.filter(l => l.assignedSalesperson === filters.assignedSalesperson);
-      if (search) filtered = filtered.filter(l => l.leadName.toLowerCase().includes(search.toLowerCase()) || l.companyName.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase()));
+      if (filters.companyName) filtered = filtered.filter(l => l.companyName.toLowerCase().includes(filters.companyName.toLowerCase()));
+
+      // Apply search (across name, company, email)
+      if (search) {
+        filtered = filtered.filter(l =>
+          l.leadName.toLowerCase().includes(search.toLowerCase()) ||
+          l.companyName.toLowerCase().includes(search.toLowerCase()) ||
+          l.email.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+
       setLeads(filtered);
     } catch (err) {
       console.error('Error fetching leads:', err);
@@ -226,6 +242,13 @@ const Leads = () => {
           onChange={(e) => setFilters({ ...filters, assignedSalesperson: e.target.value })}
           className="p-2 border ml-2"
         />
+        <input
+          type="text"
+          placeholder="Company Name"
+          value={filters.companyName}
+          onChange={(e) => setFilters({ ...filters, companyName: e.target.value })}
+          className="p-2 border ml-2"
+        />
       </div>
       {leads.length > 0 ? (
       <table className="w-full bg-white shadow rounded">
@@ -255,7 +278,8 @@ const Leads = () => {
       </table>
       ) : (
         <div className="text-center py-8 text-gray-500">
-          <p>No leads found. Use the filters or search to display leads.</p>
+          <p className="text-lg mb-2">No leads found</p>
+          <p className="text-sm">Try adjusting your filters or search terms, or create a new lead above.</p>
         </div>
       )}
     </div>
