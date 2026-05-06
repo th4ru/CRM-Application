@@ -5,16 +5,21 @@ import { useNavigate } from 'react-router-dom';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      alert('Login failed');
+      console.error('Login error:', err);
+      alert('Login failed: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,7 +43,13 @@ const Login = () => {
           className="w-full p-2 mb-4 border"
           required
         />
-        <button type="submit" className="w-full bg-blue-500 text-white p-2">Login</button>
+        <button 
+          type="submit" 
+          disabled={loading}
+          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+        >
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
       </form>
     </div>
   );

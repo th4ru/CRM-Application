@@ -30,7 +30,20 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
+    window.location.href = '/login'; // Force redirect
   };
+
+  // Add response interceptor to handle token errors
+  axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        console.log('Token invalid, logging out');
+        logout();
+      }
+      return Promise.reject(error);
+    }
+  );
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>

@@ -7,38 +7,79 @@ const Leads = () => {
   const [filters, setFilters] = useState({ status: '', leadSource: '', assignedSalesperson: '' });
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
   const [newLead, setNewLead] = useState({ leadName: '', companyName: '', email: '', phoneNumber: '', leadSource: 'Website', assignedSalesperson: '', status: 'New', dealValue: 0 });
 
   useEffect(() => {
-    fetchLeads();
+    // Don't auto-fetch leads on page load
+    // Only fetch when filters or search changes
+    if (filters.status || filters.leadSource || filters.assignedSalesperson || search) {
+      fetchLeads();
+    }
   }, [filters, search]);
 
   const fetchLeads = async () => {
-    const res = await axios.get('http://localhost:5000/api/leads');
-    let filtered = res.data;
-    if (filters.status) filtered = filtered.filter(l => l.status === filters.status);
-    if (filters.leadSource) filtered = filtered.filter(l => l.leadSource === filters.leadSource);
-    if (filters.assignedSalesperson) filtered = filtered.filter(l => l.assignedSalesperson === filters.assignedSalesperson);
-    if (search) filtered = filtered.filter(l => l.leadName.toLowerCase().includes(search.toLowerCase()) || l.companyName.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase()));
-    setLeads(filtered);
+    try {
+      const res = await axios.get('http://localhost:5000/api/leads');
+      let filtered = res.data;
+      if (filters.status) filtered = filtered.filter(l => l.status === filters.status);
+      if (filters.leadSource) filtered = filtered.filter(l => l.leadSource === filters.leadSource);
+      if (filters.assignedSalesperson) filtered = filtered.filter(l => l.assignedSalesperson === filters.assignedSalesperson);
+      if (search) filtered = filtered.filter(l => l.leadName.toLowerCase().includes(search.toLowerCase()) || l.companyName.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase()));
+      setLeads(filtered);
+    } catch (err) {
+      console.error('Error fetching leads:', err);
+      setMessage({ type: 'error', text: 'Failed to fetch leads' });
+    }
   };
 
   const deleteLead = async (id) => {
-    await axios.delete(`http://localhost:5000/api/leads/${id}`);
-    fetchLeads();
+    try {
+      await axios.delete(`http://localhost:5000/api/leads/${id}`);
+      setMessage({ type: 'success', text: 'Lead deleted successfully' });
+      fetchLeads();
+    } catch (err) {
+      console.error('Error deleting lead:', err);
+      setMessage({ type: 'error', text: 'Failed to delete lead' });
+    }
   };
 
   const createLead = async () => {
-    await axios.post('http://localhost:5000/api/leads', newLead);
-    setNewLead({ leadName: '', companyName: '', email: '', phoneNumber: '', leadSource: 'Website', assignedSalesperson: '', status: 'New', dealValue: 0 });
-    setShowForm(false);
-    fetchLeads();
+    if (!newLead.leadName || !newLead.companyName || !newLead.email || !newLead.phoneNumber || !newLead.assignedSalesperson) {
+      setMessage({ type: 'error', text: 'All fields are required' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post('http://localhost:5000/api/leads', newLead);
+      console.log('Lead created:', response.data);
+      setMessage({ type: 'success', text: 'Lead created successfully!' });
+      setNewLead({ leadName: '', companyName: '', email: '', phoneNumber: '', leadSource: 'Website', assignedSalesperson: '', status: 'New', dealValue: 0 });
+      setShowForm(false);
+      setTimeout(() => {
+        fetchLeads();
+        setMessage({ type: '', text: '' });
+      }, 1000);
+    } catch (err) {
+      console.error('Error creating lead:', err);
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to create lead';
+      setMessage({ type: 'error', text: errorMsg });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="p-6">
       <h1 className="text-3xl mb-6">Leads</h1>
-      <button onClick={() => setShowForm(!showForm)} className="mb-4 bg-green-500 text-white p-2">Create Lead</button>
+      {message.text && (
+        <div className={`mb-4 p-4 rounded ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          {message.text}
+        </div>
+      )}
+      <button onClick={() => setShowForm(!showForm)} className="mb-4 bg-green-500 text-white p-2 rounded hover:bg-green-600">Create Lead</button>
       {showForm && (
         <div className="bg-white p-6 rounded shadow mb-4">
           <h2 className="text-xl mb-4">Add New Lead</h2>
@@ -144,9 +185,10 @@ const Leads = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                disabled={loading}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
               >
-                Create Lead
+                {loading ? 'Creating...' : 'Create Lead'}
               </button>
             </div>
           </form>
@@ -185,6 +227,7 @@ const Leads = () => {
           className="p-2 border ml-2"
         />
       </div>
+      {leads.length > 0 ? (
       <table className="w-full bg-white shadow rounded">
         <thead>
           <tr>
@@ -210,6 +253,11 @@ const Leads = () => {
           ))}
         </tbody>
       </table>
+      ) : (
+        <div className="text-center py-8 text-gray-500">
+          <p>No leads found. Use the filters or search to display leads.</p>
+        </div>
+      )}
     </div>
   );
 };
