@@ -2,13 +2,68 @@ const Lead = require('../models/Lead');
 
 exports.getLeads = async (req, res) => {
   try {
-    console.log('GET /api/leads - Fetching all leads');
-    const leads = await Lead.find().sort({ createdAt: -1 });
+    console.log('GET /api/leads - Fetching all leads with query', req.query);
+    const { status, leadSource, assignedSalesperson, companyName, overdue, followUpToday } = req.query;
+    const filter = {};
+
+    if (status) filter.status = status;
+    if (leadSource) filter.leadSource = leadSource;
+    if (assignedSalesperson) filter.assignedSalesperson = assignedSalesperson;
+    if (companyName) filter.companyName = new RegExp(companyName, 'i');
+
+    const now = new Date();
+    if (overdue === 'true') {
+      filter.nextFollowUpDate = { $lte: now };
+      filter.status = { $nin: ['Won', 'Lost'] };
+    }
+
+    if (followUpToday === 'true') {
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+      filter.nextFollowUpDate = { $gte: start, $lte: end };
+      filter.status = { $nin: ['Won', 'Lost'] };
+    }
+
+    const leads = await Lead.find(filter).sort({ createdAt: -1 });
     console.log(`Found ${leads.length} leads`);
     res.json(leads);
   } catch (err) {
     console.error('Error fetching leads:', err.message);
     res.status(500).json({ message: 'Error fetching leads', error: err.message });
+  }
+};
+
+exports.getOverdueLeads = async (req, res) => {
+  try {
+    const now = new Date();
+    const leads = await Lead.find({
+      nextFollowUpDate: { $lte: now },
+      status: { $nin: ['Won', 'Lost'] }
+    }).sort({ nextFollowUpDate: 1 });
+    res.json(leads);
+  } catch (err) {
+    console.error('Error fetching overdue leads:', err.message);
+    res.status(500).json({ message: 'Error fetching overdue leads', error: err.message });
+  }
+};
+
+exports.getTodayFollowUps = async (req, res) => {
+  try {
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    const leads = await Lead.find({
+      nextFollowUpDate: { $gte: start, $lte: end },
+      status: { $nin: ['Won', 'Lost'] }
+    }).sort({ nextFollowUpDate: 1 });
+    res.json(leads);
+  } catch (err) {
+    console.error('Error fetching today follow-ups:', err.message);
+    res.status(500).json({ message: 'Error fetching today follow-ups', error: err.message });
   }
 };
 
@@ -27,7 +82,7 @@ exports.getLead = async (req, res) => {
 };
 
 exports.createLead = async (req, res) => {
-  const { leadName, companyName, email, phoneNumber, leadSource, assignedSalesperson, status, dealValue } = req.body;
+  const { leadName, companyName, email, phoneNumber, leadSource, assignedSalesperson, status, dealValue, nextFollowUpDate } = req.body;
   console.log('POST /api/leads - Creating lead:', JSON.stringify(req.body));
   
   try {
@@ -38,14 +93,15 @@ exports.createLead = async (req, res) => {
     }
     
     const lead = new Lead({ 
-      leadName, 
-      companyName, 
-      email, 
-      phoneNumber, 
-      leadSource, 
-      assignedSalesperson, 
-      status: status || 'New', 
-      dealValue: dealValue || 0 
+      leadName,
+      companyName,
+      email,
+      phoneNumber,
+      leadSource,
+      assignedSalesperson,
+      status: status || 'New',
+      dealValue: dealValue || 0,
+      nextFollowUpDate: nextFollowUpDate ? new Date(nextFollowUpDate) : undefined
     });
     
     const savedLead = await lead.save();
@@ -60,7 +116,11 @@ exports.createLead = async (req, res) => {
 exports.updateLead = async (req, res) => {
   try {
     console.log('PUT /api/leads/:id - Updating lead:', req.params.id, JSON.stringify(req.body));
-    const lead = await Lead.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const updates = { ...req.body };
+    if (updates.nextFollowUpDate) {
+      updates.nextFollowUpDate = new Date(updates.nextFollowUpDate);
+    }
+    const lead = await Lead.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true, context: 'query' });
     if (!lead) {
       return res.status(404).json({ message: 'Lead not found' });
     }
