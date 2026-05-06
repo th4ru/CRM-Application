@@ -35,9 +35,15 @@ createDefaultUser();
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api', require('./routes/leads'));
-app.use('/api', require('./routes/notes'));
-app.use('/api', require('./routes/dashboard'));
+app.use('/api/leads', require('./routes/leads'));
+app.use('/api/leads', require('./routes/notes'));
+app.use('/api/dashboard', require('./routes/dashboard'));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err.stack);
+  res.status(500).json({ message: 'Server error', error: err.message });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
