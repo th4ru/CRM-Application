@@ -251,31 +251,64 @@ const Leads = () => {
         />
       </div>
       {leads.length > 0 ? (
-      <table className="w-full bg-white shadow rounded">
-        <thead>
-          <tr>
-            <th className="p-2">Name</th>
-            <th className="p-2">Company</th>
-            <th className="p-2">Email</th>
-            <th className="p-2">Status</th>
-            <th className="p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {leads.map(lead => (
-            <tr key={lead._id}>
-              <td className="p-2">{lead.leadName}</td>
-              <td className="p-2">{lead.companyName}</td>
-              <td className="p-2">{lead.email}</td>
-              <td className="p-2">{lead.status}</td>
-              <td className="p-2">
-                <Link to={`/leads/${lead._id}`} className="text-blue-500 mr-2">View</Link>
-                <button onClick={() => deleteLead(lead._id)} className="text-red-500">Delete</button>
-              </td>
+      <div className="overflow-x-auto">
+        <table className="w-full bg-white shadow rounded table-auto">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="p-3 text-left">Name</th>
+              <th className="p-3 text-left">Company</th>
+              <th className="p-3 text-left">Email</th>
+              <th className="p-3 text-left">Phone</th>
+              <th className="p-3 text-left">Lead Source</th>
+              <th className="p-3 text-left">Assigned Salesperson</th>
+              <th className="p-3 text-left">Status</th>
+              <th className="p-3 text-left">Deal Value</th>
+              <th className="p-3 text-left">Priority</th>
+              <th className="p-3 text-left">Next Follow-Up</th>
+              <th className="p-3 text-left">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {leads.map(lead => (
+              <tr key={lead._id} className="border-t">
+                <td className="p-3">{lead.leadName}</td>
+                <td className="p-3">{lead.companyName}</td>
+                <td className="p-3">{lead.email}</td>
+                <td className="p-3">{lead.phoneNumber}</td>
+                <td className="p-3">{lead.leadSource}</td>
+                <td className="p-3">{lead.assignedSalesperson}</td>
+                <td className="p-3">
+                  <span className={`px-2 py-1 rounded text-sm ${
+                    lead.status === 'New' ? 'bg-blue-100 text-blue-800' :
+                    lead.status === 'Contacted' ? 'bg-yellow-100 text-yellow-800' :
+                    lead.status === 'Qualified' ? 'bg-green-100 text-green-800' :
+                    lead.status === 'Proposal Sent' ? 'bg-purple-100 text-purple-800' :
+                    lead.status === 'Won' ? 'bg-green-200 text-green-900' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {lead.status}
+                  </span>
+                </td>
+                <td className="p-3">${lead.dealValue?.toLocaleString() || 0}</td>
+                <td className="p-3">
+                  <span className={`px-2 py-1 rounded text-sm ${
+                    lead.priority === 'Hot' ? 'bg-red-100 text-red-800' :
+                    lead.priority === 'Warm' ? 'bg-orange-100 text-orange-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {lead.priority}
+                  </span>
+                </td>
+                <td className="p-3">{lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toLocaleDateString() : 'N/A'}</td>
+                <td className="p-3">
+                  <Link to={`/leads/${lead._id}`} className="text-blue-500 hover:text-blue-700 mr-2">View</Link>
+                  <button onClick={() => deleteLead(lead._id)} className="text-red-500 hover:text-red-700">Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       ) : (
         <div className="text-center py-8 text-gray-500">
           <p className="text-lg mb-2">No leads found</p>
