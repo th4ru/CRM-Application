@@ -4,11 +4,11 @@ exports.getStats = async (req, res) => {
   try {
     console.log('GET /api/dashboard/stats - Fetching dashboard stats');
 
-    // Total leads
+    
     const totalLeads = await Lead.countDocuments();
     console.log('Total leads:', totalLeads);
 
-    // Status counts
+    
     const statusCounts = await Lead.aggregate([
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
@@ -20,13 +20,13 @@ exports.getStats = async (req, res) => {
     const wonLeads = statusCounts.find(s => s._id === 'Won')?.count || 0;
     const lostLeads = statusCounts.find(s => s._id === 'Lost')?.count || 0;
 
-    // Total estimated deal value
+    
     const totalDealValueResult = await Lead.aggregate([
       { $group: { _id: null, total: { $sum: '$dealValue' } } }
     ]);
     const totalDealValue = totalDealValueResult[0]?.total || 0;
 
-    // Total value of won deals
+    
     const wonValueResult = await Lead.aggregate([
       { $match: { status: 'Won' } },
       { $group: { _id: null, total: { $sum: '$dealValue' } } }

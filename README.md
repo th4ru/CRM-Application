@@ -1,47 +1,148 @@
 # CRM Lead Management System
 
-A full-stack CRM application for managing sales leads.
+# 🚀 Project Overview
 
-## Tech Stack
+The CRM Lead Management System helps small sales teams efficiently manage potential customers and track sales activities.
 
-- Frontend: React + Vite + Tailwind CSS
-- Backend: Node.js + Express
-- Database: MongoDB + Mongoose
-- Authentication: JWT
+The system allows users to:
+- Authenticate securely
+- Create and manage sales leads
+- Track leads through a sales pipeline
+- Add notes and follow-up reminders
+- Search and filter leads
 
-## Features
+The application is designed with practical CRM workflows inspired by modern CRM platforms.
 
-- User authentication
-- Lead CRUD operations
-- Lead notes
-- Dashboard with stats
-- Search and filtering
+---
 
-## Setup
+# 🛠 Tech Stack Used
 
-1. Ensure MongoDB is running locally on port 27017.
+## Frontend
+- React.js (Vite)
+- Tailwind CSS
+- Axios
+- React Router DOM
 
-2. Set up backend:
-   ```
-   cd backend
-   npm install
-   npm run dev
-   ```
+## Backend
+- Node.js
+- Express.js
+- Mongoose
 
-3. Set up frontend (in a new terminal):
-   ```
-   cd frontend
-   npm install
-   npm run dev
-   ```
+## Database
+- MongoDB Atlas
 
-4. Open http://localhost:5173 and login with admin@example.com / password123
+---
 
-## Default User
+# ✨ Features Implemented
 
-- Email: admin@example.com
-- Password: password123
+## 🔐 Authentication
+- JWT-based login authentication
+- Protected frontend and backend routes
+- Default admin user support
 
-## API Documentation
+---
 
-See backend/README.md for API endpoints.
+## 📋 Lead Management
+- Create new leads
+- View all leads
+- Edit leads
+- Delete leads
+- View detailed lead information
+- Update lead statuses
+
+Lead fields include:
+- Lead Name
+- Company Name
+- Email
+- Phone Number
+- Lead Source
+- Assigned Salesperson
+- Status
+- Estimated Deal Value
+- Priority Level
+- Follow-Up Date
+- Created Date
+- Updated Date
+
+---
+
+## 📝 Lead Notes
+- Add notes to leads
+- View note history
+- Track note creator and timestamp
+
+---
+
+## 📊 Dashboard
+Dashboard includes:
+- Total Leads
+- New Leads
+- Qualified Leads
+- Won Leads
+- Lost Leads
+- Total Estimated Deal Value
+- Total Won Deal Value
+
+---
+
+## 🔍 Search & Filtering
+Users can:
+- Search leads by:
+  - Lead Name
+  - Company Name
+  - Email
+- Filter leads by:
+  - Status
+  - Lead Source
+  - Assigned Salesperson
+  - Follow-Up Status
+
+---
+
+# 🌟 Bonus Features Implemented
+
+## 🔥 Lead Priority Scoring
+Leads are automatically categorized as:
+- Hot
+- Warm
+- Cold
+
+Based on:
+- Deal value
+- Recent activity
+
+---
+
+## 🕒 Activity Timeline
+Tracks:
+- Lead creation
+- Status changes
+- Updates
+- Notes added
+
+---
+
+# 📂 Project Structure
+
+```bash
+crm-application/
+│
+├── backend/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── server.js
+│   └── .env
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── context/
+│   │   ├── services/
+│   │   └── App.jsx
+│   └── vite.config.js
+│
+└── README.md
